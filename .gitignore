@@ -1,0 +1,20 @@
+# secrets
+.env
+**/.env
+*.pem
+*.ppk
+
+# dependencies and builds
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+
+# local data
+server/data/
+*.zip
+
+# logs and OS
+*.log
+.DS_Store
+Thumbs.db
