@@ -1,5 +1,5 @@
-const CHUNK_SIZE = 900;
-const CHUNK_OVERLAP = 150;
+const CHUNK_SIZE = 1600;
+const CHUNK_OVERLAP = 200;
 const TOP_K = 5;
 
 export function splitIntoChunks(text) {

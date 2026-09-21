@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { api } from "../api";
 
-export default function ChatPage({ document }) {
+export default function ChatPage({ document, onDelete, deleting }) {
   const [messages, setMessages] = useState([]);
   const [question, setQuestion] = useState("");
   const [error, setError] = useState("");
@@ -59,6 +59,14 @@ export default function ChatPage({ document }) {
           <p className="eyebrow">Current document</p>
           <h1>{document.original_name}</h1>
         </div>
+        <button
+          type="button"
+          className="danger"
+          disabled={deleting}
+          onClick={() => onDelete?.(document)}
+        >
+          {deleting ? "Deleting..." : "Delete chat"}
+        </button>
       </header>
 
       <div className="messages">
@@ -79,7 +87,16 @@ export default function ChatPage({ document }) {
           </div>
         ))}
 
-        {loading ? <p className="muted thinking">Thinking...</p> : null}
+        {loading ? (
+          <p className="muted thinking">
+            <span className="dots" aria-hidden="true">
+              <i></i>
+              <i></i>
+              <i></i>
+            </span>
+            Thinking...
+          </p>
+        ) : null}
         {error ? <p className="error">{error}</p> : null}
         <div ref={bottomRef} />
       </div>

@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import pool from "../db.js";
 import { authRequired } from "../middleware/auth.js";
+import { deleteFromS3 } from "../services/s3.js";
 
 const router = Router();
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -96,6 +97,34 @@ router.post("/change-password", authRequired, async (req, res) => {
     res.json({ ok: true });
   } catch (error) {
     res.status(500).json({ error: error.message || "Could not change password." });
+  }
+});
+
+router.delete("/account", authRequired, async (req, res) => {
+  try {
+    const password = String(req.body.password || "");
+    const [rows] = await pool.query(
+      "SELECT id, password_hash FROM users WHERE id = ?",
+      [req.user.id],
+    );
+    const user = rows[0];
+    if (!user || !bcrypt.compareSync(password, user.password_hash)) {
+      return res.status(401).json({ error: "Password is incorrect." });
+    }
+
+    const [documents] = await pool.query(
+      "SELECT s3_key FROM documents WHERE user_id = ?",
+      [user.id],
+    );
+
+    for (const document of documents) {
+      await deleteFromS3(document.s3_key);
+    }
+
+    await pool.query("DELETE FROM users WHERE id = ?", [user.id]);
+    res.json({ ok: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message || "Could not delete the account." });
   }
 });
 

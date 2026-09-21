@@ -29,7 +29,7 @@ export default function UploadPage({ onUploaded }) {
         <p className="eyebrow">New document</p>
         <h1>Upload a file to start a chat</h1>
         <p className="muted">
-          PDF or Word (.docx). The file is stored in Amazon S3. After upload it appears under Previous chats.
+          Choose a PDF or Word (.docx) file. It is stored in Amazon S3, then indexed so you can ask questions.
         </p>
 
         <form onSubmit={handleSubmit}>
