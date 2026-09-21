@@ -49,6 +49,9 @@ export const api = {
     body.append("file", file);
     return request("/documents/upload", { method: "POST", body });
   },
+  deleteDocument(documentId) {
+    return request(`/documents/${documentId}`, { method: "DELETE" });
+  },
   getMessages(documentId) {
     return request(`/chat/${documentId}`);
   },
@@ -62,6 +65,12 @@ export const api = {
     return request("/auth/change-password", {
       method: "POST",
       body: JSON.stringify({ currentPassword, newPassword }),
+    });
+  },
+  deleteAccount(password) {
+    return request("/auth/account", {
+      method: "DELETE",
+      body: JSON.stringify({ password }),
     });
   },
 };

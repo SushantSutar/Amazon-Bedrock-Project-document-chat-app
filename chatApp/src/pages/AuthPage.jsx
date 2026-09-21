@@ -24,6 +24,19 @@ export default function AuthPage({ onAuth }) {
 
   return (
     <div className="auth-wrap">
+      <div className="auth-shell">
+        <section className="auth-hero">
+          <p className="eyebrow">Amazon Bedrock</p>
+          <h1>Ask your documents anything</h1>
+          {/* <p>
+            Upload a PDF or Word file, then chat with answers grounded in your own pages. Previous chats stay saved for each document.
+          </p> */}
+          <ul className="auth-points">
+            <li>Saved chats for every upload</li>
+            <li>RAG answers via Amazon Bedrock</li>
+            <li>Original files stored in Amazon S3</li>
+          </ul>
+        </section>
       <div className="card auth-card">
         <div className="brand auth-brand">
           <img src="/favicon.svg" alt="" width="40" height="40" />
@@ -32,7 +45,7 @@ export default function AuthPage({ onAuth }) {
         <p className="eyebrow">Document Q&A</p>
         <h1>{mode === "login" ? "Welcome back" : "Create an account"}</h1>
         <p className="muted">
-          Sign in, upload a PDF or Word file, then ask questions. Previous chats stay saved for each document.
+          Sign in to upload a file and start asking questions.
         </p>
 
         <form onSubmit={handleSubmit}>
@@ -77,6 +90,7 @@ export default function AuthPage({ onAuth }) {
             ? "Need an account? Register"
             : "Already have an account? Log in"}
         </button>
+      </div>
       </div>
     </div>
   );

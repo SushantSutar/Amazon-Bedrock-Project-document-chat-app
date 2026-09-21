@@ -1,4 +1,4 @@
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { DeleteObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 
 const s3 = new S3Client({
   region: process.env.AWS_REGION,
@@ -22,4 +22,14 @@ export async function uploadToS3({ key, body, contentType }) {
     bucket: process.env.S3_BUCKET_NAME,
     key,
   };
+}
+
+export async function deleteFromS3(key) {
+  if (!key) return;
+  await s3.send(
+    new DeleteObjectCommand({
+      Bucket: process.env.S3_BUCKET_NAME,
+      Key: key,
+    }),
+  );
 }

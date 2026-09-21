@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 import pool from "../db.js";
 import { authRequired } from "../middleware/auth.js";
 import { extractText } from "../services/extract.js";
-import { uploadToS3 } from "../services/s3.js";
+import { deleteFromS3, uploadToS3 } from "../services/s3.js";
 import { embedText } from "../services/bedrock.js";
 import { splitIntoChunks } from "../services/rag.js";
 
@@ -62,6 +62,7 @@ router.post("/upload", upload.single("file"), async (req, res) => {
       return res.status(400).json({ error: "No readable text found in this file." });
     }
 
+    console.log(`Indexing ${chunks.length} chunks for ${req.file.originalname}`);
     const embeddings = [];
     for (const chunk of chunks) {
       embeddings.push(await embedText(chunk));
@@ -109,6 +110,30 @@ router.post("/upload", upload.single("file"), async (req, res) => {
     }
   } catch (error) {
     res.status(400).json({ error: error.message || "Upload failed." });
+  }
+});
+
+router.delete("/:id", async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      "SELECT id, s3_key FROM documents WHERE id = ? AND user_id = ?",
+      [req.params.id, req.user.id],
+    );
+    const document = rows[0];
+    if (!document) {
+      return res.status(404).json({ error: "Document not found." });
+    }
+
+    await deleteFromS3(document.s3_key);
+
+    await pool.query("DELETE FROM documents WHERE id = ? AND user_id = ?", [
+      document.id,
+      req.user.id,
+    ]);
+
+    res.json({ ok: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message || "Could not delete this chat." });
   }
 });
 

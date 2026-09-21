@@ -14,8 +14,10 @@ Users register or sign in, upload a PDF or Word (`.docx`) file, and ask question
 - Change password from the signed-in workspace
 - Upload PDF or DOCX files (maximum 10 MB)
 - Persistent document list and previous chat history
+- Delete a document chat (removes S3 file, RAG chunks, and messages)
+- Delete account (removes the user, all chats, and all S3 files)
 - RAG pipeline: text extraction, chunking, Titan embeddings, cosine retrieval
-- Answers generated on Amazon Bedrock with **Amazon Nova Lite** (default) or **Claude 3 Haiku**
+- Answers generated on Amazon Bedrock with **Amazon Nova Pro** (default) or **Claude 3 Haiku**
 - Original files stored in a private Amazon S3 bucket
 
 ---
@@ -32,7 +34,7 @@ Express API                http://localhost:5000
         +-- MySQL          users, documents, chunks, messages
         +-- Amazon S3      original PDF / DOCX objects
         +-- Amazon Bedrock Titan Text Embeddings V2
-        +-- Amazon Bedrock Amazon Nova Lite (default chat model)
+        +-- Amazon Bedrock Amazon Nova Pro (default chat model)
         +-- Amazon Bedrock Claude 3 Haiku (optional chat model)
 ```
 
@@ -48,7 +50,7 @@ The browser never receives AWS credentials. Only the Node.js server calls S3 and
 | Backend    | Node.js, Express 5                              |
 | Database   | MySQL 8                                         |
 | Storage    | Amazon S3                                       |
-| AI         | Amazon Bedrock (Titan Embeddings V2, Nova Lite, Claude 3 Haiku) |
+| AI         | Amazon Bedrock (Titan Embeddings V2, Nova Pro, Claude 3 Haiku) |
 | Auth       | bcrypt, JSON Web Tokens                         |
 
 Default region: `ap-south-1` (Mumbai).
@@ -66,7 +68,7 @@ Default region: `ap-south-1` (Mumbai).
   - IAM access keys with permission to write to that bucket and to invoke Bedrock
   - Model access in Amazon Bedrock for:
     - Amazon Titan Text Embeddings V2 (`amazon.titan-embed-text-v2:0`)
-    - Amazon Nova Lite (`apac.amazon.nova-lite-v1:0`) — default chat model
+    - Amazon Nova Pro (`apac.amazon.nova-pro-v1:0`) — default chat model
     - Anthropic Claude 3 Haiku — optional chat model (see [Bedrock models](#bedrock-models))
 
 ---
@@ -81,7 +83,7 @@ Default region: `ap-south-1` (Mumbai).
 4. Create an access key for that user. Store it only in `server/.env`.
 5. In Amazon Bedrock → Model access (same region), enable:
    - Amazon Titan Text Embeddings V2
-   - Amazon Nova Lite
+   - Amazon Nova Pro
    - Anthropic Claude 3 Haiku (optional; requires a valid payment method / AWS Marketplace agreement)
 
 ---
@@ -124,24 +126,25 @@ Edit `server/.env` and set:
 | `AWS_ACCESS_KEY_ID`        | IAM access key ID                                |
 | `AWS_SECRET_ACCESS_KEY`    | IAM secret access key                            |
 | `S3_BUCKET_NAME`           | Existing bucket name (`amazon-beadrock`)         |
-| `BEDROCK_MODEL_ID`         | Chat model: Nova Lite (default) or Claude 3 Haiku |
+| `BEDROCK_MODEL_ID`         | Chat model: Nova Pro (default) or Claude 3 Haiku |
 | `BEDROCK_EMBED_MODEL_ID`   | Embedding model ID                               |
 | `MYSQL_HOST`               | MySQL host (`localhost` for local development)   |
 | `MYSQL_USER`               | MySQL user                                       |
 | `MYSQL_PASSWORD`           | MySQL password                                   |
-| `MYSQL_DATABASE`           | Existing database name (`amazonbedrock`)        |
+| `MYSQL_DATABASE`           | Existing database name (`amazonbeadrock`)        |
 
 
 ---
 
 ## Bedrock models
 
-Embeddings always use Titan. Chat answers can use either Nova Lite or Claude 3 Haiku. The backend already supports both request formats; you only change `BEDROCK_MODEL_ID` in `server/.env`.
+Embeddings always use Titan. Chat answers default to Amazon Nova Pro. The backend also supports Nova Lite and Claude 3 Haiku; you only change `BEDROCK_MODEL_ID` in `server/.env`.
 
 | Role       | Model                         | Environment value                                      | Notes |
 | ---------- | ----------------------------- | ------------------------------------------------------ | ----- |
 | Embeddings | Amazon Titan Text Embeddings V2 | `amazon.titan-embed-text-v2:0`                       | Required for RAG |
-| Chat (default) | Amazon Nova Lite          | `apac.amazon.nova-lite-v1:0`                           | Works in `ap-south-1` without Anthropic Marketplace |
+| Chat (default) | Amazon Nova Pro           | `apac.amazon.nova-pro-v1:0`                            | Stronger answers than Nova Lite; fits a few dollars per month |
+| Chat (cheaper) | Amazon Nova Lite          | `apac.amazon.nova-lite-v1:0`                           | Lower cost if you want the previous model |
 | Chat (optional) | Anthropic Claude 3 Haiku | `anthropic.claude-3-haiku-20240307-v1:0`             | Enable in Model access; needs a valid AWS payment instrument |
 | Chat (optional, APAC profile) | Claude 3 Haiku | `apac.anthropic.claude-3-haiku-20240307-v1:0`     | Use this ID if on-demand Haiku is rejected in Mumbai |
 
@@ -164,13 +167,19 @@ BEDROCK_MODEL_ID=apac.anthropic.claude-3-haiku-20240307-v1:0
 
 5. Restart the API (`npm run dev` in `server`).
 
-To return to the default:
+To return to Nova Pro (default):
+
+```env
+BEDROCK_MODEL_ID=apac.amazon.nova-pro-v1:0
+```
+
+To use the cheaper Nova Lite model:
 
 ```env
 BEDROCK_MODEL_ID=apac.amazon.nova-lite-v1:0
 ```
 
-If Claude fails with `INVALID_PAYMENT_INSTRUMENT`, keep Nova Lite until billing is fixed. Titan embeddings are independent of Claude.
+If Claude fails with `INVALID_PAYMENT_INSTRUMENT`, keep Nova Pro. Titan embeddings are independent of Claude.
 
 ### 4. Install dependencies
 
